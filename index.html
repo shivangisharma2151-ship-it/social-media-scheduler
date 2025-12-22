@@ -1,0 +1,65 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Social Media Scheduler</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Font Awesome -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+  />
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="container">
+    <h1 class="title">Social Media Scheduler</h1>
+    <p class="subtitle">Plan and schedule your social media content in one place</p>
+
+    <div class="main">
+      <!-- Create Post -->
+      <div class="card">
+        <h3>Create New Post</h3>
+
+        <label>Title</label>
+        <input type="text" placeholder="Enter post title">
+
+        <label>Content</label>
+        <textarea placeholder="What's on your mind?"></textarea>
+
+        <label>Image (optional)</label>
+        <div class="image-box">
+          <p>No image selected</p>
+          <button><i class="fa-solid fa-upload"></i> Upload Image</button>
+        </div>
+
+        <label>Platforms</label>
+        <div class="platforms">
+          <button><i class="fa-brands fa-x-twitter"></i> Twitter/X</button>
+          <button><i class="fa-brands fa-facebook"></i> Facebook</button>
+          <button><i class="fa-brands fa-instagram"></i> Instagram</button>
+          <button><i class="fa-brands fa-linkedin"></i> LinkedIn</button>
+        </div>
+
+        <label>Schedule Date & Time</label>
+        <div class="datetime">
+          <input type="date">
+          <input type="time">
+        </div>
+
+        <button class="schedule-btn">Schedule Post</button>
+      </div>
+
+      <!-- Scheduled Posts -->
+      <div class="card">
+        <h3>Scheduled Posts</h3>
+        <p class="empty">No posts scheduled. Create your first post!</p>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
