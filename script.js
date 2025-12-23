@@ -1,107 +1,171 @@
- 
- // ====== ELEMENTS ======
-const titleInput = document.querySelector('input[placeholder="Enter post title"]');
-const contentInput = document.querySelector('textarea');
-const dateInput = document.querySelector('input[type="date"]');
-const timeInput = document.querySelector('input[type="time"]');
-const scheduleBtn = document.querySelector('.schedule-btn');
-const scheduledPostsCard = document.querySelectorAll('.card')[1];
-const platformButtons = document.querySelectorAll('.platforms button');
+  // ===== ELEMENTS =====
+const caption = document.getElementById("caption");
+const platform = document.getElementById("platform");
+const scheduleTime = document.getElementById("scheduleTime");
+const imageInput = document.getElementById("imageInput");
+const preview = document.getElementById("preview");
+const postList = document.getElementById("postList");
+const toast = document.getElementById("toast");
+const charCount = document.getElementById("charCount");
 
-// ====== STATE ======
-let selectedPlatform = "";
-let posts = JSON.parse(localStorage.getItem("scheduledPosts")) || [];
+const addPostBtn = document.getElementById("addPostBtn");
+const draftBtn = document.getElementById("draftBtn");
+const exportBtn = document.getElementById("exportBtn");
+const darkToggle = document.getElementById("darkToggle");
 
-// ====== PLATFORM SELECTION ======
-platformButtons.forEach(btn => {
-  btn.addEventListener("click", () => {
-    platformButtons.forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    selectedPlatform = btn.innerText;
-  });
+// ===== STATE =====
+let posts = JSON.parse(localStorage.getItem("posts")) || [];
+let currentTab = "Scheduled";
+
+// ===== TOAST =====
+function showToast(message) {
+  toast.textContent = message;
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 2000);
+}
+
+// ===== CHARACTER COUNT =====
+caption.addEventListener("input", () => {
+  charCount.textContent = caption.value.length;
 });
 
-// ====== SAVE TO LOCAL STORAGE ======
-function savePosts() {
-  localStorage.setItem("scheduledPosts", JSON.stringify(posts));
-}
+// ===== IMAGE PREVIEW =====
+imageInput.addEventListener("change", () => {
+  const file = imageInput.files[0];
+  if (!file) return;
 
-// ====== GENERATE ID ======
-function generateId() {
-  return Date.now().toString();
-}
+  const reader = new FileReader();
+  reader.onload = () => {
+    preview.src = reader.result;
+    preview.style.display = "block";
+  };
+  reader.readAsDataURL(file);
+});
 
-// ====== RENDER POSTS ======
-function renderPosts() {
-  scheduledPostsCard.innerHTML = `<h3>Scheduled Posts</h3>`;
-
-  if (posts.length === 0) {
-    scheduledPostsCard.innerHTML +=
-      `<p class="empty">No posts scheduled. Create your first post!</p>`;
-    return;
-  }
-
-  posts.forEach(post => {
-    const div = document.createElement("div");
-    div.className = "post-item";
-
-    div.innerHTML = `
-      <p><strong>${post.title}</strong></p>
-      <p>${post.content}</p>
-      <small>
-        ${post.platform} • ${new Date(post.datetime).toLocaleString()}
-      </small>
-      <button class="delete-btn">Delete</button>
-    `;
-
-    div.querySelector(".delete-btn").addEventListener("click", () => {
-      deletePost(post.id);
-    });
-
-    scheduledPostsCard.appendChild(div);
-  });
-}
-
-// ====== DELETE POST ======
-function deletePost(id) {
-  posts = posts.filter(post => post.id !== id);
-  savePosts();
-  renderPosts();
-}
-
-// ====== ADD POST ======
-scheduleBtn.addEventListener("click", () => {
-  if (
-    !titleInput.value.trim() ||
-    !contentInput.value.trim() ||
-    !dateInput.value ||
-    !timeInput.value ||
-    !selectedPlatform
-  ) {
-    alert("Please fill all fields and select a platform");
+// ===== SAVE POST =====
+function savePost(status) {
+  if (!caption.value.trim() || !platform.value) {
+    showToast("Please fill required fields ❌");
     return;
   }
 
   const newPost = {
-    id: generateId(),
-    title: titleInput.value,
-    content: contentInput.value,
-    platform: selectedPlatform,
-    datetime: `${dateInput.value}T${timeInput.value}`
+    id: Date.now(),
+    caption: caption.value,
+    platform: platform.value,
+    time: scheduleTime.value,
+    image: preview.src || "",
+    status
   };
 
   posts.push(newPost);
-  savePosts();
+  updateStorage();
+  resetForm();
   renderPosts();
+  showToast(`${status} saved ✅`);
+}
 
-  // Reset form
-  titleInput.value = "";
-  contentInput.value = "";
-  dateInput.value = "";
-  timeInput.value = "";
-  selectedPlatform = "";
-  platformButtons.forEach(b => b.classList.remove("active"));
+// ===== BUTTON EVENTS =====
+addPostBtn.addEventListener("click", () => savePost("Scheduled"));
+draftBtn.addEventListener("click", () => savePost("Draft"));
+
+// ===== RENDER POSTS =====
+function renderPosts() {
+  postList.innerHTML = "";
+
+  const filtered = posts.filter(post => post.status === currentTab);
+
+  if (filtered.length === 0) {
+    postList.innerHTML = `<p style="text-align:center;">No posts here 📭</p>`;
+    return;
+  }
+
+  filtered.forEach(post => {
+    const li = document.createElement("li");
+    li.className = "post";
+
+    li.innerHTML = `
+      <strong>${post.platform}</strong>
+      <span class="badge ${post.status.toLowerCase()}">${post.status}</span>
+      <p>${post.caption}</p>
+      ${post.image ? `<img src="${post.image}">` : ""}
+      ${post.time ? `<small>⏰ ${post.time}</small>` : ""}
+      <br><br>
+      <button onclick="deletePost(${post.id})">🗑 Delete</button>
+    `;
+
+    postList.appendChild(li);
+  });
+}
+
+// ===== DELETE POST =====
+function deletePost(id) {
+  posts = posts.filter(post => post.id !== id);
+  updateStorage();
+  renderPosts();
+  showToast("Post deleted 🗑️");
+}
+
+// ===== STORAGE =====
+function updateStorage() {
+  localStorage.setItem("posts", JSON.stringify(posts));
+}
+
+// ===== RESET FORM =====
+function resetForm() {
+  caption.value = "";
+  platform.value = "";
+  scheduleTime.value = "";
+  imageInput.value = "";
+  preview.style.display = "none";
+  charCount.textContent = "0";
+}
+
+// ===== TABS =====
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    tab.classList.add("active");
+    currentTab = tab.dataset.status;
+    renderPosts();
+  });
 });
 
-// ====== INITIAL LOAD ======
+// ===== AUTO-PUBLISH =====
+setInterval(() => {
+  const now = new Date();
+
+  posts.forEach(post => {
+    if (
+      post.status === "Scheduled" &&
+      post.time &&
+      new Date(post.time) <= now
+    ) {
+      post.status = "Published";
+    }
+  });
+
+  updateStorage();
+  renderPosts();
+}, 60000);
+
+// ===== EXPORT =====
+exportBtn.addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify(posts, null, 2)], {
+    type: "application/json"
+  });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "scheduled-posts.json";
+  a.click();
+});
+
+// ===== DARK MODE =====
+darkToggle.addEventListener("click", () => {
+  document.body.classList.toggle("dark");
+});
+
+// ===== INITIAL LOAD =====
 renderPosts();
+ 
+ 
